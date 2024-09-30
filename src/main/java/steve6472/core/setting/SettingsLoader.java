@@ -7,7 +7,9 @@ import com.mojang.serialization.JsonOps;
 import steve6472.core.registry.Key;
 import steve6472.core.registry.ObjectRegistry;
 import steve6472.core.registry.Serializable;
+import steve6472.core.util.GsonUtil;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,5 +58,17 @@ public class SettingsLoader
     public static void loadFromJson(JsonObject json, ObjectRegistry<Setting<?, ?>> registry)
     {
         load(json, JsonOps.INSTANCE, registry);
+    }
+
+    public static void saveToJsonFile(ObjectRegistry<Setting<?, ?>> registry, File file)
+    {
+        GsonUtil.saveJson(save(JsonOps.INSTANCE, registry).getAsJsonObject(), file);
+    }
+
+    /// Does not load if file does not exist -> settings use default values
+    public static void loadFromJsonFile(ObjectRegistry<Setting<?, ?>> registry, File file)
+    {
+        if (file.exists())
+            load(GsonUtil.loadJson(file), JsonOps.INSTANCE, registry);
     }
 }
