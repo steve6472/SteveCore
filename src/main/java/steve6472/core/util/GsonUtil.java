@@ -80,6 +80,11 @@ public class GsonUtil
 
     private static void writeToFile(String jsonString, File file) throws IOException
     {
+        File parentFile = file.getParentFile();
+        if (parentFile != null && !parentFile.exists())
+            if (!parentFile.mkdirs())
+                throw new RuntimeException("Could not mkdirs for " + file);
+
         try (FileWriter fileWriter = new FileWriter(file))
         {
             fileWriter.write(jsonString);
