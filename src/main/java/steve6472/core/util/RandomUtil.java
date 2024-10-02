@@ -17,22 +17,22 @@ public class RandomUtil
 		return randomDouble(-Math.PI, Math.PI);
 	}
 
-	public static double randomSinRad()
+	public static double randomSin()
 	{
 		return Math.sin(randomRadian());
 	}
 
-	public static double randomCosRad()
+	public static double randomCos()
 	{
 		return Math.cos(randomRadian());
 	}
 
-	public static float randomSinRadFloat()
+	public static float randomSinFloat()
 	{
 		return (float) Math.sin(randomRadian());
 	}
 
-	public static float randomCosRadFloat()
+	public static float randomCosFloat()
 	{
 		return (float) Math.cos(randomRadian());
 	}
@@ -105,13 +105,13 @@ public class RandomUtil
 		return min + (max - min) * random.nextFloat();
 	}
 
-	public static boolean flipACoin()
+	public static boolean randomBoolean()
 	{
 		return randomInt(0, 1) == 1;
 	}
 
-	public static boolean decide(int falseChance)
+	public static boolean decide(double probability)
 	{
-		return randomInt(0, falseChance) == 1;
+		return random.nextDouble() < probability;
 	}
 }
