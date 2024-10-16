@@ -32,7 +32,7 @@ class KeyTest
     void testInvalidCharacter()
     {
         RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> Key.defaultNamespace("INVALID"));
-        assertEquals(runtimeException.getMessage(), "ID contains illegal characters, allowed: [a-z0-9_/]*");
+        assertEquals(runtimeException.getMessage(), "ID contains illegal characters, allowed: [a-z0-9_/]*   (INVALID)");
     }
 
     @Test

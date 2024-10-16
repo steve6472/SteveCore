@@ -1,6 +1,5 @@
 package steve6472.core.network;
 
-import com.mojang.serialization.DataResult;
 import io.netty.buffer.ByteBuf;
 import steve6472.core.registry.Key;
 

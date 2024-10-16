@@ -33,8 +33,8 @@ public class Key
 
     private Key(String namespace, String id)
     {
-        Preconditions.matchPattern(ID_MATCH, namespace, () -> "Namespace contains illegal characters, allowed: [a-z0-9_/]*");
-        Preconditions.matchPattern(ID_MATCH, id, () -> "ID contains illegal characters, allowed: [a-z0-9_/]*");
+        Preconditions.matchPattern(ID_MATCH, namespace, () -> "Namespace contains illegal characters, allowed: [a-z0-9_/]*   (" + namespace + ")");
+        Preconditions.matchPattern(ID_MATCH, id, () -> "ID contains illegal characters, allowed: [a-z0-9_/]*   (" + id + ")");
 
         this.namespace = namespace;
         this.id = id;
