@@ -10,13 +10,22 @@ import steve6472.core.util.Preconditions;
  * Date: 9/29/2024
  * Project: SteveCore <br>
  */
-public class SettingRegister
+public abstract class SettingRegister
 {
-    protected static ObjectRegistry<Setting<?, ?>> REGISTRY;
+    /*
+     * This class is horrible.
+     * REGISTRY and NAMESPACE will be replaced each time a new child class is loaded.
+     * It works, but you will no longer be allowed to access these two objects.
+     * But you should not do that anyways.
+     */
 
-    private static void checkRegistry()
+    protected static ObjectRegistry<Setting<?, ?>> REGISTRY;
+    protected static String NAMESPACE;
+
+    private static void checkValidity()
     {
         Preconditions.checkNotNull(REGISTRY, "Create a static block and assign an ObjectRegistry<Setting<?, ?>> to REGISTRY");
+        Preconditions.checkNotNull(NAMESPACE, "Create a static block and assign a String to NAMESPACE");
     }
 
     /*
@@ -25,45 +34,45 @@ public class SettingRegister
 
     protected static IntSetting registerInt(String id, int defaultValue)
     {
-        checkRegistry();
+        checkValidity();
         var obj = new IntSetting(defaultValue);
-        obj.key = Key.defaultNamespace(id);
+        obj.key = Key.withNamespace(NAMESPACE, id);
         REGISTRY.register(obj);
         return obj;
     }
 
     protected static StringSetting registerString(String id, String defaultValue)
     {
-        checkRegistry();
+        checkValidity();
         var obj = new StringSetting(defaultValue);
-        obj.key = Key.defaultNamespace(id);
+        obj.key = Key.withNamespace(NAMESPACE, id);
         REGISTRY.register(obj);
         return obj;
     }
 
     protected static BoolSetting registerBool(String id, boolean defaultValue)
     {
-        checkRegistry();
+        checkValidity();
         var obj = new BoolSetting(defaultValue);
-        obj.key = Key.defaultNamespace(id);
+        obj.key = Key.withNamespace(NAMESPACE, id);
         REGISTRY.register(obj);
         return obj;
     }
 
     protected static FloatSetting registerFloat(String id, float defaultValue)
     {
-        checkRegistry();
+        checkValidity();
         var obj = new FloatSetting(defaultValue);
-        obj.key = Key.defaultNamespace(id);
+        obj.key = Key.withNamespace(NAMESPACE, id);
         REGISTRY.register(obj);
         return obj;
     }
 
     protected static <E extends Enum<E> & StringValue> EnumSetting<E> registerEnum(String id, E defaultValue)
     {
-        checkRegistry();
+        checkValidity();
         var obj = new EnumSetting<>(defaultValue);
-        obj.key = Key.defaultNamespace(id);
+        obj.key = Key.withNamespace(NAMESPACE, id);
         REGISTRY.register(obj);
         return obj;
     }

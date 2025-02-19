@@ -44,7 +44,7 @@
         <dependency>
             <groupId>io.netty</groupId>
             <artifactId>netty-buffer</artifactId>
-            <version>4.1.114.Final</version>
+            <version>4.1.118.Final</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-nop -->
         <dependency>

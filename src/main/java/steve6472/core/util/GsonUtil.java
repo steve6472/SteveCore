@@ -1,11 +1,13 @@
 package steve6472.core.util;
 
 import com.google.gson.*;
+import steve6472.core.log.Log;
 
 import java.io.*;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.function.Supplier;
+import java.util.logging.Logger;
 
 /**
  * Created by steve6472
@@ -14,6 +16,8 @@ import java.util.function.Supplier;
  */
 public class GsonUtil
 {
+    private static final Logger LOGGER = Log.getLogger(GsonUtil.class);
+
     public static void saveJson(JsonElement json, File file)
     {
         try
@@ -21,6 +25,7 @@ public class GsonUtil
             saveJsonElementOrdered(json, file);
         } catch (IOException e)
         {
+            LOGGER.severe("Could not save json to '" + file + "'");
             throw new RuntimeException(e);
         }
     }
@@ -32,6 +37,7 @@ public class GsonUtil
             return JsonParser.parseReader(reader);
         } catch (IOException e)
         {
+            LOGGER.severe("Could not load json from '" + file + "'");
             throw new RuntimeException(e);
         }
     }
@@ -81,6 +87,7 @@ public class GsonUtil
     private static void writeToFile(String jsonString, File file) throws IOException
     {
         File parentFile = file.getParentFile();
+
         if (parentFile != null && !parentFile.exists())
             if (!parentFile.mkdirs())
                 throw new RuntimeException("Could not mkdirs for " + file);
