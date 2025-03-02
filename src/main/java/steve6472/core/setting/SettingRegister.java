@@ -32,11 +32,29 @@ public abstract class SettingRegister
      *
      */
 
+    protected static IntSetting registerInt(Key key, int defaultValue)
+    {
+        checkValidity();
+        var obj = new IntSetting(defaultValue);
+        obj.key = key;
+        REGISTRY.register(obj);
+        return obj;
+    }
+
     protected static IntSetting registerInt(String id, int defaultValue)
     {
         checkValidity();
         var obj = new IntSetting(defaultValue);
         obj.key = Key.withNamespace(NAMESPACE, id);
+        REGISTRY.register(obj);
+        return obj;
+    }
+
+    protected static StringSetting registerString(Key key, String defaultValue)
+    {
+        checkValidity();
+        var obj = new StringSetting(defaultValue);
+        obj.key = key;
         REGISTRY.register(obj);
         return obj;
     }
@@ -50,6 +68,15 @@ public abstract class SettingRegister
         return obj;
     }
 
+    protected static BoolSetting registerBool(Key key, boolean defaultValue)
+    {
+        checkValidity();
+        var obj = new BoolSetting(defaultValue);
+        obj.key = key;
+        REGISTRY.register(obj);
+        return obj;
+    }
+
     protected static BoolSetting registerBool(String id, boolean defaultValue)
     {
         checkValidity();
@@ -59,11 +86,29 @@ public abstract class SettingRegister
         return obj;
     }
 
+    protected static FloatSetting registerFloat(Key key, float defaultValue)
+    {
+        checkValidity();
+        var obj = new FloatSetting(defaultValue);
+        obj.key = key;
+        REGISTRY.register(obj);
+        return obj;
+    }
+
     protected static FloatSetting registerFloat(String id, float defaultValue)
     {
         checkValidity();
         var obj = new FloatSetting(defaultValue);
         obj.key = Key.withNamespace(NAMESPACE, id);
+        REGISTRY.register(obj);
+        return obj;
+    }
+
+    protected static <E extends Enum<E> & StringValue> EnumSetting<E> registerEnum(Key key, E defaultValue)
+    {
+        checkValidity();
+        var obj = new EnumSetting<>(defaultValue);
+        obj.key = key;
         REGISTRY.register(obj);
         return obj;
     }
