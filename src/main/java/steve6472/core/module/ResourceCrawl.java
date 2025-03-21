@@ -17,16 +17,16 @@ import java.util.logging.Logger;
  * Date: 11/11/2024
  * Project: Flare <br>
  */
-final class ResourceCrawl
+public final class ResourceCrawl
 {
     private static final Logger LOGGER = Log.getLogger(ResourceCrawl.class);
 
-    static void crawl(File startingDir, boolean stripExtFromRel, BiConsumer<File, String> end)
+    public static void crawl(File startingDir, boolean stripExtFromRel, BiConsumer<File, String> end)
     {
         recursiveCrawl(startingDir, startingDir, stripExtFromRel, end);
     }
 
-    static <T> void crawlAndLoadJsonCodec(File startingDir, Codec<T> codec, BiConsumer<T, String> end)
+    public static <T> void crawlAndLoadJsonCodec(File startingDir, Codec<T> codec, BiConsumer<T, String> end)
     {
         crawl(startingDir, true, (file, relPath) ->
         {
@@ -46,7 +46,7 @@ final class ResourceCrawl
         });
     }
 
-    static void recursiveCrawl(File file, File startingDir, boolean stripExtFromRel, BiConsumer<File, String> end)
+    private static void recursiveCrawl(File file, File startingDir, boolean stripExtFromRel, BiConsumer<File, String> end)
     {
         File[] files = file.listFiles();
         if (files == null)
