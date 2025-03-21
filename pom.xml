@@ -34,6 +34,11 @@
             <artifactId>joml</artifactId>
             <version>${joml.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>24.0.0</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/org.junit.jupiter/junit-jupiter-api -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
