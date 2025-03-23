@@ -18,12 +18,17 @@ public final class Module
 
     public static final Codec<Module> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.fieldOf("name").forGetter(Module::name),
+            Codec.STRING.optionalFieldOf("version_string", "unknown").forGetter(Module::versionString),
+            // TODO: bound to 0-inf
+            Codec.INT.fieldOf("version").forGetter(Module::version),
             STRING_OR_ARRAY.fieldOf("description").forGetter(Module::description),
             STRING_OR_ARRAY.optionalFieldOf("authors", List.of("--unknown author(s)--")).forGetter(Module::authors),
             STRING_OR_ARRAY.optionalFieldOf("depend", List.of()).forGetter(Module::depend))
         .apply(instance, Module::new));
 
     private final String name;
+    private final String versionString;
+    private final int version;
     private final List<String> description;
     private final List<String> authors;
     private final List<String> depend;
@@ -35,9 +40,11 @@ public final class Module
     /**
      *
      */
-    public Module(String name, List<String> description, List<String> authors, List<String> depend)
+    public Module(String name, String versionString, int version, List<String> description, List<String> authors, List<String> depend)
     {
         this.name = name;
+        this.versionString = versionString;
+        this.version = version;
         this.description = description;
         this.authors = authors;
         this.depend = depend;
@@ -46,6 +53,16 @@ public final class Module
     public String name()
     {
         return name;
+    }
+
+    public String versionString()
+    {
+        return versionString;
+    }
+
+    public int version()
+    {
+        return version;
     }
 
     public List<String> description()
