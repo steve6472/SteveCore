@@ -31,7 +31,7 @@ public abstract class RegistryRegister
     }
 
     /*
-     * Creators
+     * Registry
      */
 
     protected static <T extends Keyable & Serializable<?>> Registry<T> createRegistry(String id, Runnable bootstrap)
@@ -59,6 +59,10 @@ public abstract class RegistryRegister
     {
         return createRegistry(key, (Runnable) bootstrap::get);
     }
+
+    /*
+     * Object registry
+     */
 
     protected static <T extends Keyable> ObjectRegistry<T> createObjectRegistry(String id, Runnable bootstrap)
     {
@@ -110,6 +114,92 @@ public abstract class RegistryRegister
     protected static <T extends Keyable> ObjectRegistry<T> createObjectRegistry(Key key, T defaultValue, Supplier<T> bootstrap)
     {
         return createObjectRegistry(key, defaultValue, (Runnable) bootstrap::get);
+    }
+
+    /*
+     * Namespaced Registry
+     */
+
+    protected static <T extends Keyable & Serializable<?>> NamespacedRegistry<T> createNamespacedRegistry(String defaultNamespace, String id, Runnable bootstrap)
+    {
+        checkValidity();
+        Key key = Key.withNamespace(NAMESPACE, id);
+        LOGGER.finest("Creating Namespaced Registry '" + key + "'");
+        LOADERS.put(key, bootstrap);
+        return new NamespacedRegistry<>(defaultNamespace, key);
+    }
+
+    protected static <T extends Keyable & Serializable<?>> NamespacedRegistry<T> createNamespacedRegistry(String defaultNamespace, String id, Supplier<T> bootstrap)
+    {
+        return createNamespacedRegistry(defaultNamespace, id, (Runnable) bootstrap::get);
+    }
+
+    protected static <T extends Keyable & Serializable<?>> NamespacedRegistry<T> createNamespacedRegistry(String defaultNamespace, Key key, Runnable bootstrap)
+    {
+        LOGGER.finest("Creating Namespaced Registry '" + key + "'");
+        LOADERS.put(key, bootstrap);
+        return new NamespacedRegistry<>(defaultNamespace, key);
+    }
+
+    protected static <T extends Keyable & Serializable<?>> NamespacedRegistry<T> createNamespacedRegistry(String defaultNamespace, Key key, Supplier<T> bootstrap)
+    {
+        return createNamespacedRegistry(defaultNamespace, key, (Runnable) bootstrap::get);
+    }
+
+    /*
+     * Namespaced Object Registry
+     */
+
+    protected static <T extends Keyable> NamespacedObjectRegistry<T> createNamespacedObjectRegistry(String defaultNamespace, String id, Runnable bootstrap)
+    {
+        checkValidity();
+        Key key = Key.withNamespace(NAMESPACE, id);
+        LOGGER.finest("Creating Namespaced Object Registry '" + key + "'");
+        LOADERS.put(key, bootstrap);
+        return new NamespacedObjectRegistry<>(defaultNamespace, key);
+    }
+
+    protected static <T extends Keyable> NamespacedObjectRegistry<T> createNamespacedObjectRegistry(String defaultNamespace, String id, Supplier<T> bootstrap)
+    {
+        return createNamespacedObjectRegistry(defaultNamespace, id, (Runnable) bootstrap::get);
+    }
+
+    protected static <T extends Keyable> NamespacedObjectRegistry<T> createNamespacedObjectRegistry(String defaultNamespace, Key key, Runnable bootstrap)
+    {
+        LOGGER.finest("Creating Namespaced Object Registry '" + key + "'");
+        LOADERS.put(key, bootstrap);
+        return new NamespacedObjectRegistry<>(defaultNamespace, key);
+    }
+
+    protected static <T extends Keyable> NamespacedObjectRegistry<T> createNamespacedObjectRegistry(String defaultNamespace, Key key, Supplier<T> bootstrap)
+    {
+        return createNamespacedObjectRegistry(defaultNamespace, key, (Runnable) bootstrap::get);
+    }
+
+    protected static <T extends Keyable> NamespacedObjectRegistry<T> createNamespacedObjectRegistry(String defaultNamespace, String id, T defaultValue, Runnable bootstrap)
+    {
+        checkValidity();
+        Key key = Key.withNamespace(NAMESPACE, id);
+        LOGGER.finest("Creating Namespaced Object Registry '" + key + "'");
+        LOADERS.put(key, bootstrap);
+        return new NamespacedObjectRegistry<>(defaultNamespace, key, defaultValue);
+    }
+
+    protected static <T extends Keyable> NamespacedObjectRegistry<T> createNamespacedObjectRegistry(String defaultNamespace, String id, T defaultValue, Supplier<T> bootstrap)
+    {
+        return createNamespacedObjectRegistry(defaultNamespace, id, defaultValue, (Runnable) bootstrap::get);
+    }
+
+    protected static <T extends Keyable> NamespacedObjectRegistry<T> createNamespacedObjectRegistry(String defaultNamespace, Key key, T defaultValue, Runnable bootstrap)
+    {
+        LOGGER.finest("Creating Namespaced Object Registry '" + key + "'");
+        LOADERS.put(key, bootstrap);
+        return new NamespacedObjectRegistry<>(defaultNamespace, key, defaultValue);
+    }
+
+    protected static <T extends Keyable> NamespacedObjectRegistry<T> createNamespacedObjectRegistry(String defaultNamespace, Key key, T defaultValue, Supplier<T> bootstrap)
+    {
+        return createNamespacedObjectRegistry(defaultNamespace, key, defaultValue, (Runnable) bootstrap::get);
     }
 
     /*

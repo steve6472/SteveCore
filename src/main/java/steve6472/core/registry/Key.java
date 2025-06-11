@@ -15,16 +15,13 @@ import java.util.regex.Pattern;
  */
 public class Key
 {
-    public static final Codec<Key> CODEC = Codec.STRING.flatXmap(string -> {
-        if (!string.contains(":"))
-        {
-            return DataResult.success(defaultNamespace(string));
-        } else
-        {
-            String[] split = string.split(":");
-            return DataResult.success(withNamespace(split[0], split[1]));
-        }
-    }, id -> DataResult.success(id.toString()));
+    @Deprecated
+    public static final Codec<Key> CODEC = Codec.STRING.flatXmap(string -> DataResult.success(parse(string)), id -> DataResult.success(id.toString()));
+
+    public static Codec<Key> withDefaultNamespace(String defaultNamespace)
+    {
+        return Codec.STRING.flatXmap(string -> DataResult.success(parse(defaultNamespace, string)), id -> DataResult.success(id.toString()));
+    }
 
     private static final Pattern ID_MATCH = Pattern.compile("[a-z0-9_/]*");
 
@@ -45,9 +42,34 @@ public class Key
         return new Key(namespace, id);
     }
 
+    @Deprecated
     public static Key defaultNamespace(String id)
     {
         return new Key(SteveCore.DEFAULT_KEY_NAMESPACE, id);
+    }
+
+    public static Key parse(String string)
+    {
+        if (!string.contains(":"))
+        {
+            return defaultNamespace(string);
+        } else
+        {
+            String[] split = string.split(":");
+            return withNamespace(split[0], split[1]);
+        }
+    }
+
+    public static Key parse(String defaultNamespace, String string)
+    {
+        if (!string.contains(":"))
+        {
+            return withNamespace(defaultNamespace, string);
+        } else
+        {
+            String[] split = string.split(":");
+            return withNamespace(split[0], split[1]);
+        }
     }
 
     public String namespace()
