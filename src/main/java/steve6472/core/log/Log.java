@@ -2,10 +2,9 @@ package steve6472.core.log;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.*;
+import java.util.logging.Formatter;
 
 /**
  * Created by steve6472
@@ -16,6 +15,8 @@ public class Log
 {
     private static FileHandler fileHandler;
     private static ConsoleHandler consoleHandler;
+
+    private static final Map<Logger, Set<String>> ONCE_WARNINGS = new HashMap<>();
 
     static 
     {
@@ -31,6 +32,13 @@ public class Log
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public static void warningOnce(Logger logger, String message)
+    {
+        Set<String> strings = ONCE_WARNINGS.computeIfAbsent(logger, _ -> new HashSet<>());
+        if (strings.add(message))
+            logger.warning(message);
     }
 
     public static void exceptionSevere(Logger logger, Throwable throwable)
