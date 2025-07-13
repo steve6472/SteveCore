@@ -6,6 +6,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import steve6472.core.log.Log;
+import steve6472.core.registry.Key;
 import steve6472.core.util.GsonUtil;
 
 import java.io.File;
@@ -26,6 +27,8 @@ public final class ResourceCrawl
         recursiveCrawl(startingDir, startingDir, stripExtFromRel, end);
     }
 
+    /// @deprecated use [ModuleManager#loadParts(ModulePart, Codec, BiConsumer)] instead
+    @Deprecated(forRemoval = true)
     public static <T> void crawlAndLoadJsonCodec(File startingDir, Codec<T> codec, BiConsumer<T, String> end)
     {
         crawl(startingDir, true, (file, relPath) ->
@@ -43,6 +46,28 @@ public final class ResourceCrawl
 
             T obj = decode.getOrThrow().getFirst();
             end.accept(obj, relPath);
+        });
+    }
+
+    public static <T> void crawlAndLoadJsonCodec(FullModulePart part, Codec<T> codec, BiConsumer<T, Key> end)
+    {
+        crawl(part.path(), true, (file, relPath) ->
+        {
+            JsonElement jsonElement = GsonUtil.loadJson(file);
+            DataResult<Pair<T, JsonElement>> decode;
+            Key key = Key.withNamespace(part.namespace(), relPath);
+            LOGGER.finest("Loading %s '%s' from module '%s'".formatted(part.name(), key, part.module().name()));
+            try
+            {
+                decode = codec.decode(JsonOps.INSTANCE, jsonElement);
+            } catch (Exception ex)
+            {
+                LOGGER.severe("Error when decoding:\n" + jsonElement.toString());
+                throw ex;
+            }
+
+            T obj = decode.getOrThrow().getFirst();
+            end.accept(obj, Key.withNamespace(part.namespace(), relPath));
         });
     }
 

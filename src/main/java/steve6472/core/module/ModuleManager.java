@@ -2,11 +2,13 @@ package steve6472.core.module;
 
 import com.google.gson.JsonElement;
 import com.mojang.datafixers.util.Pair;
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import org.jetbrains.annotations.Nullable;
 import steve6472.core.SteveCore;
 import steve6472.core.log.Log;
+import steve6472.core.registry.Key;
 import steve6472.core.util.GsonUtil;
 
 import java.io.File;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
 /**
@@ -94,6 +97,19 @@ public class ModuleManager
     public List<Module> getModules()
     {
         return modules.stream().map(Map.Entry::getValue).toList();
+    }
+
+    public void iterateWithNamespaces(BiConsumer<Module, String> moduleNamespaceConsumer)
+    {
+        for (Module module : getModules())
+        {
+            module.iterateNamespaces((_, namespace) -> moduleNamespaceConsumer.accept(module, namespace));
+        }
+    }
+
+    public <T> void loadParts(ModulePart part, Codec<T> codec, BiConsumer<T, Key> end)
+    {
+        iterateWithNamespaces((module, namespace) -> ResourceCrawl.crawlAndLoadJsonCodec(module.createPart(part, namespace), codec, end));
     }
 
     @Nullable

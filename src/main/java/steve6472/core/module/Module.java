@@ -4,7 +4,9 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 /**
@@ -97,5 +99,13 @@ public final class Module
     public File getRootFolder()
     {
         return root;
+    }
+
+    // Module path: <namespace, full>
+    private static final Map<ModulePart, Map<String, FullModulePart>> PARTS = new HashMap<>();
+
+    public FullModulePart createPart(ModulePart part, String namespace)
+    {
+        return PARTS.computeIfAbsent(part, _ -> new HashMap<>()).computeIfAbsent(namespace, n -> new FullModulePart(part, this, n));
     }
 }
