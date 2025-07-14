@@ -102,7 +102,7 @@ public final class Module
     }
 
     // Module path: <namespace, full>
-    private static final Map<ModulePart, Map<String, FullModulePart>> PARTS = new HashMap<>();
+    static final Map<ModulePart, Map<String, FullModulePart>> PARTS = new HashMap<>();
 
     public FullModulePart createPart(ModulePart part, String namespace)
     {

@@ -140,4 +140,9 @@ public class ModuleManager
         }
         return List.copyOf(namespaces);
     }
+
+    public void clearPartsCache()
+    {
+        Module.PARTS.clear();
+    }
 }
