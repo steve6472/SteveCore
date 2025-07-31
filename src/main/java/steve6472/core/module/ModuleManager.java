@@ -208,9 +208,9 @@ public class ModuleManager
         void accept(Module module, File file, Key key, T object);
     }
 
-    public static <C> void loadModuleJsonCodecs(ModulePart part, ModuleManager moduleManager, Codec<C> codec, LoadedResult<C> end)
+    public <C> void loadModuleJsonCodecs(ModulePart part, Codec<C> codec, LoadedResult<C> end)
     {
-        for (Module module : moduleManager.getModules())
+        for (Module module : getModules())
         {
             module.iterateNamespaces((folder, namespace) ->
             {
