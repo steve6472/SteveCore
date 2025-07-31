@@ -12,10 +12,7 @@ import steve6472.core.registry.Key;
 import steve6472.core.util.GsonUtil;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 
@@ -54,31 +51,124 @@ public class ModuleManager
             module.namespaces = listNamespaces(moduleRoot);
             this.modules.add(Map.entry(rootName, module));
 
-            LOGGER.info("Loaded module '" + rootName + "'");
+            LOGGER.finer("Loaded module '" + rootName + "'");
         }
 
-        fixLoadOrder();
+        sortModules();
+        LOGGER.info("Module order:");
+        for (Map.Entry<String, Module> module : this.modules)
+        {
+            LOGGER.info(" - '%s' '%s'".formatted(module.getKey(), module.getValue().name()));
+        }
     }
 
-    private void fixLoadOrder()
+    private void sortModules()
     {
-        Map.Entry<String, Module> coreModule = null;
+        LOGGER.finest("Sorting modules");
+        // Step 1: Build module map and adjacency list
+        Map<String, Module> moduleMap = new HashMap<>();
+        Map<String, List<String>> graph = new HashMap<>();
+        Set<String> allNodes = new HashSet<>();
 
-        for (Map.Entry<String, Module> module : modules)
+        for (Map.Entry<String, Module> entry : modules)
         {
-            if (module.getKey().equals(SteveCore.CORE_MODULE))
+            String name = entry.getKey();
+            moduleMap.put(name, entry.getValue());
+            graph.putIfAbsent(name, new ArrayList<>());
+            allNodes.add(name);
+        }
+
+        // Step 2: Build directed edges based on depend() and after()
+        for (Module module : moduleMap.values())
+        {
+            String moduleName = module.root.getName();
+
+            for (String dep : module.depend())
             {
-                coreModule = module;
-                break;
+                // dep -> module
+                if (!moduleMap.containsKey(dep))
+                {
+                    throw new IllegalStateException("Missing dependency: '%s' for module '%s'".formatted(dep, moduleName));
+                }
+                graph.get(dep).add(moduleName);
+            }
+
+            for (String after : module.after())
+            {
+                if (moduleMap.containsKey(after))
+                {
+                    graph.get(after).add(moduleName); // after -> module
+                }
+            }
+
+            for (String before : module.before())
+            {
+                if (moduleMap.containsKey(before))
+                {
+                    graph.get(moduleName).add(before); // module -> before
+                }
             }
         }
 
-        if (coreModule == null)
-            throw new RuntimeException("Built-in Core module (%s) not loaded!".formatted(SteveCore.CORE_MODULE));
+        // Step 3: Ensure core module loads first
+        if (!moduleMap.containsKey(SteveCore.CORE_MODULE))
+        {
+            throw new IllegalStateException("Missing '%s' module.".formatted(SteveCore.CORE_MODULE));
+        }
 
-        // Ensure a core module is always loaded first!
-        modules.remove(coreModule);
-        modules.addFirst(coreModule);
+        for (String mod : allNodes)
+        {
+            if (!mod.equals(SteveCore.CORE_MODULE))
+            {
+                graph.get(SteveCore.CORE_MODULE).add(mod);  // core -> all
+            }
+        }
+
+        // Step 4: Topological sort using DFS and cycle detection
+        List<String> sorted = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        Set<String> visiting = new HashSet<>();
+
+        for (String node : allNodes)
+        {
+            if (!visited.contains(node))
+            {
+                dfs(node, graph, visited, visiting, sorted);
+            }
+        }
+
+        // Step 5: Reorder modules list based on sorted order
+        Map<String, Module> nameToModule = new HashMap<>();
+        for (Map.Entry<String, Module> entry : modules)
+        {
+            nameToModule.put(entry.getKey(), entry.getValue());
+        }
+
+        modules.clear();
+        for (String name : sorted)
+        {
+            modules.add(Map.entry(name, nameToModule.get(name)));
+        }
+    }
+
+    // Depth-First-Search
+    private void dfs(String node, Map<String, List<String>> graph, Set<String> visited, Set<String> visiting, List<String> result)
+    {
+        if (visiting.contains(node))
+        {
+            throw new IllegalStateException("Circular dependency detected at module: '" + node + "'");
+        }
+        if (visited.contains(node))
+            return;
+
+        visiting.add(node);
+        for (String neighbor : graph.getOrDefault(node, Collections.emptyList()))
+        {
+            dfs(neighbor, graph, visited, visiting, result);
+        }
+        visiting.remove(node);
+        visited.add(node);
+        result.addFirst(node); // prepend to build in reverse order
     }
 
     @Nullable
@@ -112,6 +202,24 @@ public class ModuleManager
         iterateWithNamespaces((module, namespace) -> ResourceCrawl.crawlAndLoadJsonCodec(module.createPart(part, namespace), codec, end));
     }
 
+    @FunctionalInterface
+    public interface LoadedResult<T>
+    {
+        void accept(Module module, File file, Key key, T object);
+    }
+
+    public static <C> void loadModuleJsonCodecs(ModulePart part, ModuleManager moduleManager, Codec<C> codec, LoadedResult<C> end)
+    {
+        for (Module module : moduleManager.getModules())
+        {
+            module.iterateNamespaces((folder, namespace) ->
+            {
+                File file = new File(folder, part.path());
+                ResourceCrawl.crawlAndLoadJsonCodec(module.createPart(part, namespace), codec, (object, key) -> end.accept(module, file, key, object));
+            });
+        }
+    }
+
     @Nullable
     private File getModuleInfo(File module)
     {
@@ -143,6 +251,9 @@ public class ModuleManager
 
     public void clearPartsCache()
     {
-        Module.PARTS.clear();
+        for (Map.Entry<String, Module> module : modules)
+        {
+            module.getValue().parts.clear();
+        }
     }
 }

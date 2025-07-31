@@ -11,6 +11,7 @@ import steve6472.core.registry.ObjectRegistry;
 import java.lang.Math;
 import java.util.*;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Created by steve6472
@@ -56,6 +57,8 @@ public class ExtraCodecs
     }, vec3 -> DataResult.success(List.of(vec3.x, vec3.y, vec3.z)));
 
     public static final Codec<UUID> UUID = Codec.STRING.xmap(java.util.UUID::fromString, java.util.UUID::toString);
+
+    public static final Codec<Pattern> PATTERN = Codec.STRING.xmap(Pattern::compile, Pattern::toString);
 
     public static <T extends Keyable> Codec<T> keyedFromRegistry(ObjectRegistry<T> registry)
     {

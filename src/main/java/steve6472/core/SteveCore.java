@@ -9,6 +9,12 @@ import java.io.File;
  */
 public class SteveCore
 {
+    /* # TODOS
+     *
+     * [x] Module ordering (ty ChatGPT)
+     *
+     */
+
     /// Default namespace to use for Key
     public static String DEFAULT_KEY_NAMESPACE = "core";
 
