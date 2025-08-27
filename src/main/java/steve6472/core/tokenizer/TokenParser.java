@@ -8,7 +8,7 @@ import java.util.function.Supplier;
  * Date: 9/3/2022
  * Project: ScriptIt
  * <p>
- * <a href="https://en.cppreference.com/w/cpp/language/operator_precedence">...</a>
+ * <a href="https://en.cppreference.com/w/cpp/language/operator_precedence">C++ operator precedence</a>
  *
  ***********************/
 public class TokenParser<R>

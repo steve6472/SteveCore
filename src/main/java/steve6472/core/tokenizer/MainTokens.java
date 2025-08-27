@@ -20,10 +20,4 @@ public enum MainTokens implements Token
 	{
 		return "";
 	}
-
-	@Override
-	public boolean isMerge()
-	{
-		return false;
-	}
 }

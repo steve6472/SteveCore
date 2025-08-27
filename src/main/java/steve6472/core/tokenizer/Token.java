@@ -9,7 +9,5 @@ public interface Token
 {
 	String getSymbol();
 
-	boolean isMerge();
-
 	int ordinal();
 }

@@ -5,6 +5,7 @@ package steve6472.core.tokenizer;
  * Date: 9/3/2022
  * Project: ScriptIt
  */
+@SuppressWarnings("unused")
 public enum SymbolTokens implements Token
 {
 	// Mathematics / Binary
@@ -17,40 +18,33 @@ public enum SymbolTokens implements Token
 	BIT_AND("&"),
 	BIT_OR("|"),
 	BIT_XOR("^"),
-	LSH("<<", true),
-	RSH(">>", true),
+	LSH("<<"),
+	RSH(">>"),
 
-	ASSIGN_ADD("+=", true),
-	ASSIGN_SUB("-=", true),
-	ASSIGN_MUL("*=", true),
-	ASSIGN_DIV("/=", true),
-	ASSIGN_MOD("%=", true),
-	ASSIGN_BIT_AND("&=", true),
-	ASSIGN_BIT_OR("|=", true),
-	ASSIGN_BIT_XOR("^=", true),
+	ASSIGN_ADD("+="),
+	ASSIGN_SUB("-="),
+	ASSIGN_MUL("*="),
+	ASSIGN_DIV("/="),
+	ASSIGN_MOD("%="),
+	ASSIGN_BIT_AND("&="),
+	ASSIGN_BIT_OR("|="),
+	ASSIGN_BIT_XOR("^="),
 
-	SINGLE_LINE_COMMENT("//", true),
-	MULTI_LINE_COMMENT_BEGIN("/*", true),
-	MULTI_LINE_COMMENT_END("*/", true),
+	SINGLE_LINE_COMMENT("//"),
+	MULTI_LINE_COMMENT_BEGIN("/*"),
+	MULTI_LINE_COMMENT_END("*/"),
 
-	/* FIXME
-	 * The merging in MiniTokenizer/TokenParser would die cause it checks only the first TWO characters
-	 * and as you can see these SHITS have THREE characters
-	 * AAAAAAAAAAAAAAA
-	 *
-	 * I don't wanna deal with this
-	 * It's just... not gonna get implemented for a while
-	 */
-	//ASSIGN_LSH("<<=", true),
-	//ASSIGN_RSH(">>=", true),
+	ASSIGN_LSH("<<="),
+	ASSIGN_RSH(">>="),
+	IDK_THE_NAME_OF_THIS_ONE(">>>="),
 
 	// Equality
-	EQUALS("==", true),
-	NOT_EQUAL("!=", true),
+	EQUALS("=="),
+	NOT_EQUAL("!="),
 
 	// Relativity
-	LESS_THAN_EQUAL("<=", true),
-	GREATER_THAN_EQUAL(">=", true),
+	LESS_THAN_EQUAL("<="),
+	GREATER_THAN_EQUAL(">="),
 	LESS_THAN("<"),
 	GREATER_THAN(">"),
 
@@ -59,11 +53,11 @@ public enum SymbolTokens implements Token
 
 	// Boolean
 	NOT("!"),
-	AND("&&", true),
-	OR("||", true),
+	AND("&&"),
+	OR("||"),
 
-	PRE_INC("++", true),
-	PRE_DEC("--", true),
+	PRE_INC("++"),
+	PRE_DEC("--"),
 
 	// Special
 	COMMA(","),
@@ -79,38 +73,20 @@ public enum SymbolTokens implements Token
 	BRACKET_CURLY_RIGHT("}"),
 	BRACKET_SQUARE_LEFT("["),
 	BRACKET_SQUARE_RIGHT("]"),
-	INDEX("[]", true)
+	INDEX("[]")
 
 	;
 
 	private final String symbol;
-	private final boolean isMerge;
-
-	SymbolTokens()
-	{
-		this("", false);
-	}
 
 	SymbolTokens(String symbol)
 	{
-		this(symbol, false);
-	}
-
-	SymbolTokens(String symbol, boolean isMerge)
-	{
 		this.symbol = symbol;
-		this.isMerge = isMerge;
 	}
 
 	@Override
 	public String getSymbol()
 	{
 		return symbol;
-	}
-
-	@Override
-	public boolean isMerge()
-	{
-		return isMerge;
 	}
 }

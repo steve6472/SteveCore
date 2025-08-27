@@ -14,12 +14,11 @@ import java.util.regex.Pattern;
  ***********************/
 public final class Tokenizer
 {
+	private static final boolean DEBUG_TOKENIZER = false;
+	private static final int MAX_SYMBOL_MERGE = 4;
 	private final List<SmallToken> tokens;
 	private final Set<Integer> newLines;
 	private int currentToken = -1;
-
-	public int maxMergeDistance = 3;
-	private final List<SmallToken> mergeStack;
 
 	private static final Pattern IS_DECIMAL = Pattern.compile("([+-]?\\d*(\\.\\d+)?)+");
 	private static final Pattern IS_INTEGER = Pattern.compile("([+-]?\\d)+");
@@ -38,7 +37,6 @@ public final class Tokenizer
 	{
 		tokens = new ArrayList<>();
 		newLines = new HashSet<>();
-		mergeStack = new ArrayList<>();
 
 		MyStreamTokenizer tokenizer = createTokenizer(string);
 		tokenize(tokenizer, tokenStorage);
@@ -60,6 +58,8 @@ public final class Tokenizer
 		int lastLine = 1;
 		int lastColumn = 1;
 
+		List<SmallToken> readBacklog = new ArrayList<>(MAX_SYMBOL_MERGE);
+
 		w: while (true)
 		{
 			int token;
@@ -68,9 +68,9 @@ public final class Tokenizer
 			int line = tokenizer.lineno();
 			int column;
 
-			if (!mergeStack.isEmpty())
+			if (!readBacklog.isEmpty())
 			{
-				SmallToken remove = mergeStack.removeFirst();
+				SmallToken remove = readBacklog.removeFirst();
 				token = remove._token();
 				sval = remove.sval();
 				line = remove.line;
@@ -99,10 +99,6 @@ public final class Tokenizer
 				column = lastColumn;
 			}
 
-			// Because the tokenizer is silly, I spent 50 minutes on this fucking condition
-			if (token == '-')
-				sval = "-";
-
 			switch (token)
 			{
 				case StreamTokenizer.TT_EOF ->
@@ -116,19 +112,68 @@ public final class Tokenizer
 				case '\n' -> newLines.add(tokens.size()); // New line
 				default ->
 				{
-					if (sval == null)
+					// Find the max biggest possible symbol
+					// If none match, throw exception for first symbol
+					if (sval == null || sval.isEmpty())
 					{
-						Token merged = mergeTokens(tokenizer, tokenStorage);
+						readBacklog.add(new SmallToken(null, null, line, column, token));
+						for (int i = 0; i < MAX_SYMBOL_MERGE - 1 - readBacklog.size(); i++)
+						{
+							int nextToken;
+                            try
+                            {
+	                            nextToken = tokenizer.nextToken();
+                            } catch (IOException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+							readBacklog.add(new SmallToken(null, tokenizer.sval, tokenizer.lineno(), column, nextToken));
+							if (nextToken == StreamTokenizer.TT_EOF)
+								break;
+						}
 
-						if (merged == null)
-							merged = tokenStorage.fromSymbol("" + (char) token);
-						else
-							mergeStack.clear();
+						if (DEBUG_TOKENIZER)
+							System.out.println("Backlog: " + readBacklog);
 
-						if (merged == null)
-							throw new RuntimeException("Unknown symbol " + token + " '" + (char) token + ", line: " + line + ", column: " + column);
-						else
-							tokens.add(new SmallToken(merged, merged.getSymbol(), line, column));
+						boolean hasFoundToken = false;
+						// iterate token-count times
+                        for (int i = 0; i < readBacklog.size(); i++)
+                        {
+							// From count > 0 create svalues (meaning from largest to smallest token)
+	                        StringBuilder svalue = new StringBuilder();
+							int mergeCount = readBacklog.size() - i - 1;
+	                        for (int j = mergeCount; j >= 0; j--)
+	                        {
+		                        SmallToken smallToken = readBacklog.get(j);
+		                        svalue.append(smallToken.string());
+	                        }
+							// See if token exists
+	                        Token foundToken = tokenStorage.fromSymbol(svalue.toString());
+
+							// If token exists, add it to tokens
+							if (foundToken != null)
+							{
+								if (DEBUG_TOKENIZER)
+									System.out.println("Found token: " + foundToken + ", removing " + (mergeCount + 1) + " entries");
+								tokens.add(new SmallToken(foundToken, foundToken.getSymbol(), line, column));
+								// remove entries from backlog that were used to create the merged token
+								for (int j = 0; j < mergeCount + 1; j++)
+								{
+									readBacklog.removeFirst();
+								}
+								if (DEBUG_TOKENIZER)
+									System.out.println("After removal: " + readBacklog);
+								hasFoundToken = true;
+								break;
+							}
+                        }
+						if (!hasFoundToken)
+						{
+							if (DEBUG_TOKENIZER)
+								System.out.println("Before not found: " + readBacklog);
+							SmallToken first = readBacklog.getFirst();
+							throw new RuntimeException("Unknown symbol " + first._token + " '" + (char) first._token + "', sval: " + first.sval + ", line: " + first.line + ", column: " + first.column);
+						}
 					} else
 					{
 						Token type = tokenStorage.fromSymbol(sval);
@@ -143,37 +188,6 @@ public final class Tokenizer
 		}
 
 		tokens.add(new SmallToken(MainTokens.EOF, "", tokenizer.lineno(), 0));
-	}
-
-	private Token mergeTokens(MyStreamTokenizer tokenizer, TokenStorage tokenStorage)
-	{
-		if (maxMergeDistance <= 1)
-			return null;
-
-		StringBuilder symbol = new StringBuilder("" + (char) tokenizer.ttype);
-
-		for (int i = 0; i < maxMergeDistance - 1; i++)
-		{
-			try
-			{
-				symbol.append((char) tokenizer.nextToken());
-				mergeStack.add(new SmallToken(null, tokenizer.sval, tokenizer.lineno(), -1, tokenizer.ttype));
-			} catch (IOException e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-
-		for (int i = 0; i < maxMergeDistance - 1; i++)
-		{
-			Token iToken = tokenStorage.fromSymbol(symbol.toString());
-			if (iToken != null)
-				return iToken;
-			else
-				symbol.setLength(symbol.length() - 1);
-		}
-
-		return null;
 	}
 
 	public boolean isNextTokenNewLine()
@@ -267,7 +281,11 @@ public final class Tokenizer
 		@Override
 		public String toString()
 		{
-			return "Token{" + "type=" + type + ", sval='" + sval + '\'' + '}';
+			if (_token == 0)
+			{
+				return "SmallToken{" + "type=" + type + ", sval='" + sval + '\'' + '}';
+			}
+			return "SmallToken{" + "type=" + type + ", sval='" + sval + '\'' + ", token=" + _token + '}';
 		}
 
 		public String string()
