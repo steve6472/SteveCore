@@ -66,11 +66,11 @@ public final class Tokenizer
 			String sval;
 
 			int line = tokenizer.lineno();
-			int column = -1;
+			int column;
 
 			if (!mergeStack.isEmpty())
 			{
-				SmallToken remove = mergeStack.remove(0);
+				SmallToken remove = mergeStack.removeFirst();
 				token = remove._token();
 				sval = remove.sval();
 				line = remove.line;
@@ -98,6 +98,10 @@ public final class Tokenizer
 				lastColumn++;
 				column = lastColumn;
 			}
+
+			// Because the tokenizer is silly, I spent 50 minutes on this fucking condition
+			if (token == '-')
+				sval = "-";
 
 			switch (token)
 			{

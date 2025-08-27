@@ -42,6 +42,22 @@ public interface BufferCodecs
         return bytes;
     });
 
+    BufferCodec<ByteBuf, int[]> INT_ARRAY = BufferCodec.of((buff, arr) -> {
+        buff.writeInt(arr.length);
+        for (int i : arr)
+        {
+            buff.writeInt(i);
+        }
+    }, buff -> {
+        int size = buff.readInt();
+        int[] ints = new int[size];
+        for (int i = 0; i < size; i++)
+        {
+            ints[i] = buff.readInt();
+        }
+        return ints;
+    });
+
     static BufferCodec<ByteBuf, String> stringUTF8(int maxSize)
     {
         return BufferCodec.of((buff, str) -> {
@@ -52,6 +68,8 @@ public interface BufferCodecs
             buff.writeBytes(bytes);
         }, buff -> {
             int size = buff.readInt();
+            if (size > maxSize)
+                throw new RuntimeException("Max string size mismatch, expected " + maxSize + ", got " + size);
             byte[] bytes = new byte[size];
             buff.readBytes(bytes);
             return new String(bytes);
