@@ -1,9 +1,12 @@
 package steve6472.core.tokenizer;
 
+import steve6472.core.log.Log;
+
 import java.io.IOException;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 /**********************
@@ -14,6 +17,8 @@ import java.util.regex.Pattern;
  ***********************/
 public final class Tokenizer
 {
+	private static final Logger LOGGER = Log.getLogger(Tokenizer.class);
+
 	private static final boolean DEBUG_TOKENIZER = false;
 	private static final int MAX_SYMBOL_MERGE = 4;
 	private final List<SmallToken> tokens;
@@ -47,6 +52,7 @@ public final class Tokenizer
 		StringReader r = new StringReader(string);
 		MyStreamTokenizer tokenizer = new MyStreamTokenizer(r);
 		tokenizer.ordinaryChar('.');
+		tokenizer.ordinaryChar('-');
 		tokenizer.wordChars('_', '_');
 		tokenizer.eolIsSignificant(true);
 
@@ -133,7 +139,7 @@ public final class Tokenizer
 						}
 
 						if (DEBUG_TOKENIZER)
-							System.out.println("Backlog: " + readBacklog);
+							LOGGER.fine("Backlog: " + readBacklog);
 
 						boolean hasFoundToken = false;
 						// iterate token-count times
@@ -142,11 +148,18 @@ public final class Tokenizer
 							// From count > 0 create svalues (meaning from largest to smallest token)
 	                        StringBuilder svalue = new StringBuilder();
 							int mergeCount = readBacklog.size() - i - 1;
+	                        if (DEBUG_TOKENIZER)
+								LOGGER.finest("Initial mergeCount: " + mergeCount);
+
 	                        for (int j = mergeCount; j >= 0; j--)
 	                        {
 		                        SmallToken smallToken = readBacklog.get(j);
 		                        svalue.append(smallToken.string());
 	                        }
+
+							if (DEBUG_TOKENIZER)
+								LOGGER.finer("Testing: " + svalue);
+
 							// See if token exists
 	                        Token foundToken = tokenStorage.fromSymbol(svalue.toString());
 
@@ -154,7 +167,7 @@ public final class Tokenizer
 							if (foundToken != null)
 							{
 								if (DEBUG_TOKENIZER)
-									System.out.println("Found token: " + foundToken + ", removing " + (mergeCount + 1) + " entries");
+									LOGGER.fine("Found token: " + foundToken + ", removing " + (mergeCount + 1) + " entries");
 								tokens.add(new SmallToken(foundToken, foundToken.getSymbol(), line, column));
 								// remove entries from backlog that were used to create the merged token
 								for (int j = 0; j < mergeCount + 1; j++)
@@ -162,7 +175,7 @@ public final class Tokenizer
 									readBacklog.removeFirst();
 								}
 								if (DEBUG_TOKENIZER)
-									System.out.println("After removal: " + readBacklog);
+									LOGGER.fine("After removal: " + readBacklog);
 								hasFoundToken = true;
 								break;
 							}
@@ -170,7 +183,7 @@ public final class Tokenizer
 						if (!hasFoundToken)
 						{
 							if (DEBUG_TOKENIZER)
-								System.out.println("Before not found: " + readBacklog);
+								LOGGER.fine("Before not found: " + readBacklog);
 							SmallToken first = readBacklog.getFirst();
 							throw new RuntimeException("Unknown symbol " + first._token + " '" + (char) first._token + "', sval: " + first.sval + ", line: " + first.line + ", column: " + first.column);
 						}
@@ -183,11 +196,48 @@ public final class Tokenizer
 						else
 							tokens.add(new SmallToken(type, sval, line, column));
 					}
+
+					if (DEBUG_TOKENIZER)
+						LOGGER.warning("");
 				}
 			}
 		}
 
 		tokens.add(new SmallToken(MainTokens.EOF, "", tokenizer.lineno(), 0));
+		fixNegativeNumbers();
+	}
+
+	private void fixNegativeNumbers()
+	{
+		boolean doAgain = true;
+
+		while (doAgain)
+		{
+			for (int i = 0; i < tokens.size() - 1; i++)
+			{
+				SmallToken left = tokens.get(i);
+				SmallToken right = tokens.get(i + 1);
+				if ("-".equals(left.sval))
+				{
+					if (right.type() == MainTokens.NUMBER_DOUBLE)
+					{
+						tokens.remove(i + 1);
+						tokens.remove(i);
+						tokens.add(i, new SmallToken(MainTokens.NUMBER_DOUBLE, "-" + right.sval, 0, 0, MyStreamTokenizer.TT_NUMBER));
+						break;
+					}
+
+					if (right.type() == MainTokens.NUMBER_INT)
+					{
+						tokens.remove(i + 1);
+						tokens.remove(i);
+						tokens.add(i, new SmallToken(MainTokens.NUMBER_INT, "-" + right.sval, 0, 0, MyStreamTokenizer.TT_NUMBER));
+						break;
+					}
+				}
+			}
+			doAgain = false;
+		}
 	}
 
 	public boolean isNextTokenNewLine()

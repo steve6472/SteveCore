@@ -12,6 +12,7 @@ import java.util.regex.Pattern;
  * Date: 9/29/2024
  * Project: SteveCore <br>
  */
+@SuppressWarnings("unused")
 public class MathUtil
 {
 	public static final float INV_255 = 1f / 255f;
@@ -19,25 +20,6 @@ public class MathUtil
 	private static final float FLOAT_COMPARE_PRECISION = 0.00000001f;
 	private static final Pattern IS_DECIMAL = Pattern.compile("([+-]?\\d*(\\.\\d+)?)+");
 	private static final Pattern IS_INTEGER = Pattern.compile("([+-]?\\d)+");
-
-	/*
-	 * Clamp
-	 */
-
-	public static double clamp(double number, double min, double max)
-	{
-		return Math.min(Math.max(number, min), max);
-	}
-
-	public static float clamp(float number, float min, float max)
-	{
-		return Math.min(Math.max(number, min), max);
-	}
-
-	public static int clamp(int number, int min, int max)
-	{
-		return Math.min(Math.max(number, min), max);
-	}
 
 	/*
 	 * Is number in range
@@ -212,7 +194,7 @@ public class MathUtil
 	public static float smoothstep(float edge0, float edge1, float x)
 	{
 		// Scale, bias and saturate x to 0..1 range
-		x = clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+		x = Math.clamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
 		// Evaluate polynomial
 		return x * x * (3 - 2 * x);
 	}

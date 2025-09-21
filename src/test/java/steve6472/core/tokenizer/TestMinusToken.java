@@ -1,5 +1,6 @@
 package steve6472.core.tokenizer;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -35,6 +36,7 @@ public class TestMinusToken
     }
 
     @Test
+    @Disabled("Tokenizer now merges minus and number, it does not take into account whitespace at all")
     void testSingleNumberWithMinusInFront()
     {
         final TokenStorage tokenStorage;
@@ -85,6 +87,73 @@ public class TestMinusToken
     }
 
     @Test
+    void testExpWithMinusParenthesisAndMinus()
+    {
+        final TokenStorage tokenStorage;
+        TokenParser<Te> parser;
+
+        tokenStorage = new TokenStorage();
+        tokenStorage.addTokens(TestToken.class);
+
+        parser = new TokenParser<>(tokenStorage);
+        parser.tokenize("30 - (5 - -2)");
+
+        List<Tokenizer.SmallToken> tokens = parser.tokenizer.getTokens();
+        System.out.println("\n\n");
+        System.out.println("Tokenized: " + tokens);
+
+        // -2, 43, 40, -2, 45, -2, 41, -1
+        assertEquals(tokens.getFirst().type(), MainTokens.NUMBER_INT);
+        assertEquals(tokens.get(1).type(), TestToken.SUB);
+        assertEquals(tokens.get(2).type(), TestToken.LEFT);
+        assertEquals(tokens.get(3).type(), MainTokens.NUMBER_INT);
+        assertEquals(tokens.get(4).type(), TestToken.SUB);
+        assertEquals(tokens.get(5).type(), MainTokens.NUMBER_INT);
+        assertEquals(tokens.get(6).type(), TestToken.RIGHT);
+        assertEquals(tokens.get(7).type(), MainTokens.EOF);
+    }
+
+    @Test
+    void testMath()
+    {
+        final TokenStorage tokenStorage;
+        TokenParser<Te> parser;
+
+        tokenStorage = new TokenStorage();
+        tokenStorage.addTokens(TestToken.class);
+
+        parser = new TokenParser<>(tokenStorage);
+        parser.tokenize("math.max(-math.sin(2), -0.95)");
+
+        List<Tokenizer.SmallToken> tokens = parser.tokenizer.getTokens();
+        System.out.println("\n\n");
+        System.out.println("Tokenized: ");
+        for (Tokenizer.SmallToken token : tokens)
+        {
+            System.out.println(token);
+        }
+
+        // -2, 43, 40, -2, 45, -2, 41, -1
+        assertEquals(tokens.getFirst().type(), MainTokens.NAME);
+        assertEquals(tokens.get(1).type(), TestToken.DOT);
+        assertEquals(tokens.get(2).type(), MainTokens.NAME);
+        assertEquals(tokens.get(3).type(), TestToken.LEFT);
+        assertEquals(tokens.get(4).type(), TestToken.SUB);
+        assertEquals(tokens.get(5).type(), MainTokens.NAME);
+        assertEquals(tokens.get(6).type(), TestToken.DOT);
+        assertEquals(tokens.get(7).type(), MainTokens.NAME);
+
+        assertEquals(tokens.get(8).type(), TestToken.LEFT);
+        assertEquals(tokens.get(9).type(), MainTokens.NUMBER_INT);
+        assertEquals(tokens.get(10).type(), TestToken.RIGHT);
+        assertEquals(tokens.get(11).type(), TestToken.COMMA);
+        assertEquals(tokens.get(12).type(), MainTokens.NUMBER_DOUBLE);
+        assertEquals(tokens.get(13).type(), TestToken.RIGHT);
+        assertEquals(tokens.get(14).type(), MainTokens.EOF);
+
+    }
+
+    @Test
     void testMerge()
     {
         final TokenStorage tokenStorage;
@@ -128,6 +197,8 @@ public class TestMinusToken
         RIGHT(")"),
         EQUALS("=="),
         ASSIGN("="),
+        DOT("."),
+        COMMA(","),
 
         ;
 

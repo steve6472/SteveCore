@@ -58,6 +58,22 @@ public interface BufferCodecs
         return ints;
     });
 
+    BufferCodec<ByteBuf, long[]> LONG_ARRAY = BufferCodec.of((buff, arr) -> {
+        buff.writeInt(arr.length);
+        for (long l : arr)
+        {
+            buff.writeLong(l);
+        }
+    }, buff -> {
+        int size = buff.readInt();
+        long[] longs = new long[size];
+        for (int i = 0; i < size; i++)
+        {
+            longs[i] = buff.readLong();
+        }
+        return longs;
+    });
+
     static BufferCodec<ByteBuf, String> stringUTF8(int maxSize)
     {
         return BufferCodec.of((buff, str) -> {
