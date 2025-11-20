@@ -48,6 +48,16 @@ public final class Profiler
         return totalElapsedTime / measurementsToAverage;
     }
 
+    public double getMeasurementAt(int index)
+    {
+        return measurements[index];
+    }
+
+    public int getTotalMeasurements()
+    {
+        return measurements.length;
+    }
+
     public double averageNano()    { return lastAverage; }
     public double averageMilli()   { return lastAverage / 1e6d; }
     public double averageSeconds() { return lastAverage / 1e9d; }

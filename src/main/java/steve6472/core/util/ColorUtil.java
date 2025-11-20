@@ -123,6 +123,14 @@ public class ColorUtil
         return (argb & ~(0xff << 24)) | (newAlpha << 24);
     }
 
+    public static int multiplyAlpha(int argb, float alphaMultiplier)
+    {
+        if (alphaMultiplier >= 1f)
+            return argb;
+
+        return setAlpha(argb, (int) (getAlpha(argb) * alphaMultiplier));
+    }
+
     public static int shiftHue(int argb, float hueShift)
     {
         // Convert color to HSB
