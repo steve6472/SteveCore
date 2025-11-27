@@ -114,6 +114,29 @@ public class TestMinusToken
     }
 
     @Test
+    void testtestGreaterEq()
+    {
+        final TokenStorage tokenStorage;
+        TokenParser<Te> parser;
+
+        tokenStorage = new TokenStorage();
+        tokenStorage.addTokens(TestToken.class);
+
+        parser = new TokenParser<>(tokenStorage);
+        parser.tokenize("7 >= 2");
+
+        List<Tokenizer.SmallToken> tokens = parser.tokenizer.getTokens();
+        System.out.println("\n\n");
+        System.out.println("Tokenized: " + tokens);
+
+        // -2, 43, 40, -2, 45, -2, 41, -1
+        assertEquals(tokens.getFirst().type(), MainTokens.NUMBER_INT);
+        assertEquals(tokens.get(1).type(), TestToken.GREATER_EQ);
+        assertEquals(tokens.get(2).type(), MainTokens.NUMBER_INT);
+        assertEquals(tokens.get(3).type(), MainTokens.EOF);
+    }
+
+    @Test
     void testMath()
     {
         final TokenStorage tokenStorage;
@@ -196,6 +219,7 @@ public class TestMinusToken
         LEFT("("),
         RIGHT(")"),
         EQUALS("=="),
+        GREATER_EQ(">="),
         ASSIGN("="),
         DOT("."),
         COMMA(","),

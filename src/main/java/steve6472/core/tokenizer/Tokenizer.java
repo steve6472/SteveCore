@@ -151,7 +151,7 @@ public final class Tokenizer
 	                        if (DEBUG_TOKENIZER)
 								LOGGER.finest("Initial mergeCount: " + mergeCount);
 
-	                        for (int j = mergeCount; j >= 0; j--)
+	                        for (int j = 0; j < mergeCount + 1; j++)
 	                        {
 		                        SmallToken smallToken = readBacklog.get(j);
 		                        svalue.append(smallToken.string());
