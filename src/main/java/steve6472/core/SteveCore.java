@@ -1,5 +1,7 @@
 package steve6472.core;
 
+import steve6472.core.registry.Key;
+
 import java.io.File;
 
 /**
@@ -15,12 +17,15 @@ public class SteveCore
      *
      */
 
-    /// Default namespace to use for Key
-    public static String DEFAULT_KEY_NAMESPACE = "core";
-
     /// Root folder for modules
     public static File MODULES = new File("modules");
 
     /// This module will **always** be loaded first
     public static String CORE_MODULE = "core";
+
+    /// Constant used for root registry
+    public static final Key ROOT_MASTER_REGISTRY = Key.parse("core", "root");
+    public static final Key ROOT_SETTINGS_REGISTRY = Key.parse("core", "root_settings");
+    public static final Key ROOT_STATIC_REGISTRY = Key.parse("core", "root_static");
+    public static final Key ROOT_DYNAMIC_REGISTRY = Key.parse("core", "root_reloadable");
 }

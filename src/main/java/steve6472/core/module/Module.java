@@ -2,6 +2,7 @@ package steve6472.core.module;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import steve6472.core.util.ExtraCodecs;
 
 import java.io.File;
 import java.util.HashMap;
@@ -21,8 +22,7 @@ public final class Module
     public static final Codec<Module> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.STRING.fieldOf("name").forGetter(Module::name),
             Codec.STRING.optionalFieldOf("version_string", "unknown").forGetter(Module::versionString),
-            // TODO: bound to 0-inf
-            Codec.INT.fieldOf("version").forGetter(Module::version),
+            ExtraCodecs.intAbove(0).fieldOf("version").forGetter(Module::version),
             STRING_OR_ARRAY.fieldOf("description").forGetter(Module::description),
             STRING_OR_ARRAY.optionalFieldOf("authors", List.of("--unknown author(s)--")).forGetter(Module::authors),
             STRING_OR_ARRAY.optionalFieldOf("depend", List.of()).forGetter(Module::depend),

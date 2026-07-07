@@ -4,9 +4,6 @@ import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import org.joml.*;
-import steve6472.core.registry.Key;
-import steve6472.core.registry.Keyable;
-import steve6472.core.registry.ObjectRegistry;
 
 import java.lang.Math;
 import java.util.*;
@@ -60,39 +57,42 @@ public class ExtraCodecs
 
     public static final Codec<Pattern> PATTERN = Codec.STRING.xmap(Pattern::compile, Pattern::toString);
 
-    public static <T extends Keyable> Codec<T> keyedFromRegistry(ObjectRegistry<T> registry)
-    {
-        return Key.CODEC.flatXmap(key -> {
-            T obj = registry.get(key);
-            if (obj == null)
-                return DataResult.error(() -> "Could not get '" + key + "' from registry '" + registry.getRegistryKey() + "'");
-            else
-                return DataResult.success(obj);
-        }, t -> DataResult.success(t.key()));
-    }
-
-    public static final Codec<Map<String, Key>> MAP_STRING_KEY = ExtraCodecs.mapListCodec(Codec.STRING, Key.CODEC);
-
     public static <K, V> Codec<Map<K, V>> mapListCodec(Codec<K> key, Codec<V> value)
     {
-        return Codec.compoundList(key, value).flatXmap(
-            list -> {
-                Map<K, V> map = new HashMap<>(Math.min(6, list.size()));
-                for (Pair<K, V> faceTypeFacePair : list)
+        return Codec.compoundList(key, value).flatXmap(list ->
+        {
+            Map<K, V> map = new HashMap<>(Math.min(6, list.size()));
+            for (Pair<K, V> faceTypeFacePair : list)
+            {
+                V put = map.put(faceTypeFacePair.getFirst(), faceTypeFacePair.getSecond());
+                if (put != null)
                 {
-                    V put = map.put(faceTypeFacePair.getFirst(), faceTypeFacePair.getSecond());
-                    if (put != null)
-                    {
-                        return DataResult.error(() -> "Two same values for " + faceTypeFacePair.getFirst());
-                    }
+                    return DataResult.error(() -> "Two same values for " + faceTypeFacePair.getFirst());
                 }
-                return DataResult.success(map);
-            },
-            map -> {
-                List<Pair<K, V>> list = new ArrayList<>(map.size());
-                map.forEach((k, v) -> list.add(new Pair<>(k, v)));
-                return DataResult.success(list);
             }
-        );
+            return DataResult.success(map);
+        }, map ->
+        {
+            List<Pair<K, V>> list = new ArrayList<>(map.size());
+            map.forEach((k, v) -> list.add(new Pair<>(k, v)));
+            return DataResult.success(list);
+        });
+    }
+
+    static <N extends Number & Comparable<N>> Function<N, DataResult<N>> checkAbove(N minInclusive)
+    {
+        return (value) ->
+        {
+            if (value.compareTo(minInclusive) >= 0)
+                return DataResult.success(value);
+
+            return DataResult.error(() -> "Value " + value + " outside of range [" + minInclusive + "]");
+        };
+    }
+
+    public static Codec<Integer> intAbove(int minInclusive)
+    {
+        Function<Integer, DataResult<Integer>> checker = checkAbove(minInclusive);
+        return Codec.INT.flatXmap(checker, checker);
     }
 }

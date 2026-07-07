@@ -1,0 +1,8 @@
+{
+    named: "test_1",
+    value: "Foo 1",
+    action: {
+        type: "heal",
+        hp: 42
+    }
+}

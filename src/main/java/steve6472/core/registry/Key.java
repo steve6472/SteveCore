@@ -2,7 +2,6 @@ package steve6472.core.registry;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import steve6472.core.SteveCore;
 import steve6472.core.util.Preconditions;
 
 import java.util.Objects;
@@ -15,10 +14,7 @@ import java.util.regex.Pattern;
  */
 public class Key
 {
-    @Deprecated
-    public static final Codec<Key> CODEC = Codec.STRING.flatXmap(string -> DataResult.success(parse(string)), id -> DataResult.success(id.toString()));
-
-    public static Codec<Key> withDefaultNamespace(String defaultNamespace)
+    public static Codec<Key> makeCodec(String defaultNamespace)
     {
         return Codec.STRING.flatXmap(string -> DataResult.success(parse(defaultNamespace, string)), id -> DataResult.success(id.toString()));
     }
@@ -30,8 +26,8 @@ public class Key
 
     private Key(String namespace, String id)
     {
-        Preconditions.matchPattern(ID_MATCH, namespace, () -> "Namespace contains illegal characters, allowed: [a-z0-9_/]*   (" + namespace + ")");
-        Preconditions.matchPattern(ID_MATCH, id, () -> "ID contains illegal characters, allowed: [a-z0-9_/]*   (" + id + ")");
+        Preconditions.matchPattern(ID_MATCH, namespace, () -> "Namespace contains illegal characters, allowed: %s   (%s)".formatted(ID_MATCH.pattern(), namespace));
+        Preconditions.matchPattern(ID_MATCH, id, () -> "ID contains illegal characters, allowed: %s   (%s)".formatted(ID_MATCH.pattern(), id));
 
         this.namespace = namespace;
         this.id = id;
@@ -40,24 +36,6 @@ public class Key
     public static Key withNamespace(String namespace, String id)
     {
         return new Key(namespace, id);
-    }
-
-    @Deprecated
-    public static Key defaultNamespace(String id)
-    {
-        return new Key(SteveCore.DEFAULT_KEY_NAMESPACE, id);
-    }
-
-    public static Key parse(String string)
-    {
-        if (!string.contains(":"))
-        {
-            return defaultNamespace(string);
-        } else
-        {
-            String[] split = string.split(":");
-            return withNamespace(split[0], split[1]);
-        }
     }
 
     public static Key parse(String defaultNamespace, String string)

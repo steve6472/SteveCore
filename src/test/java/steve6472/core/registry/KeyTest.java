@@ -1,7 +1,6 @@
 package steve6472.core.registry;
 
 import org.junit.jupiter.api.Test;
-import steve6472.core.SteveCore;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,51 +14,44 @@ class KeyTest
     @Test
     void withNamespace()
     {
-        Key key = Key.withNamespace("test_namespace", "test_id");
-        assertEquals(key.namespace(), "test_namespace");
-        assertEquals(key.id(), "test_id");
-    }
-
-    @Test
-    void defaultNamespace()
-    {
-        Key key = Key.defaultNamespace("test_id");
-        assertEquals(key.namespace(), SteveCore.DEFAULT_KEY_NAMESPACE);
-        assertEquals(key.id(), "test_id");
+        final String namespace = "test_namespace";
+        Key key = Key.withNamespace(namespace, "test_id");
+        assertEquals(namespace, key.namespace());
+        assertEquals("test_id", key.id());
     }
 
     @Test
     void testInvalidCharacter()
     {
-        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> Key.defaultNamespace("INVALID"));
-        assertEquals(runtimeException.getMessage(), "ID contains illegal characters, allowed: [a-z0-9_/]*   (INVALID)");
+        RuntimeException runtimeException = assertThrows(RuntimeException.class, () -> Key.withNamespace("test", "INVALID"));
+        assertEquals("ID contains illegal characters, allowed: [a-z0-9_/]*   (INVALID)", runtimeException.getMessage());
     }
 
     @Test
     void testValidCharacter()
     {
-        assertDoesNotThrow(() -> Key.defaultNamespace("abcdefghijlkmnopqrstuvwxyz0123456789_/"));
+        assertDoesNotThrow(() -> Key.withNamespace("test", "abcdefghijlkmnopqrstuvwxyz0123456789_/"));
     }
 
     @Test
     void namespace()
     {
         Key key = Key.withNamespace("test_namespace", "test_id");
-        assertEquals(key.namespace(), "test_namespace");
+        assertEquals("test_namespace", key.namespace());
     }
 
     @Test
     void id()
     {
         Key key = Key.withNamespace("test_namespace", "test_id");
-        assertEquals(key.id(), "test_id");
+        assertEquals("test_id", key.id());
     }
 
     @Test
     void testToString()
     {
         Key key = Key.withNamespace("test_namespace", "test_id");
-        assertEquals(key.toString(), "test_namespace:test_id");
+        assertEquals("test_namespace:test_id", key.toString());
     }
 
     @Test

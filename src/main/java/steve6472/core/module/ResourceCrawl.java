@@ -62,7 +62,7 @@ public final class ResourceCrawl
                 decode = codec.decode(JsonOps.INSTANCE, jsonElement);
             } catch (Exception ex)
             {
-                LOGGER.severe("Error when decoding:\n" + jsonElement.toString());
+                LOGGER.severe("Error when decoding '" + key + "'\n" + jsonElement.toString());
                 throw ex;
             }
 

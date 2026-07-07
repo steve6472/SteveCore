@@ -21,16 +21,11 @@ public interface BufferCodecs
     BufferCodec<ByteBuf, Double> DOUBLE = BufferCodec.of(ByteBuf::writeDouble, ByteBuf::readDouble);
     BufferCodec<ByteBuf, String> STRING = stringUTF8(32767);
     BufferCodec<ByteBuf, UUID> UUID = BufferCodec.of(LONG, java.util.UUID::getMostSignificantBits, LONG, java.util.UUID::getLeastSignificantBits, UUID::new);
-    BufferCodec<ByteBuf, Key> KEY = BufferCodec.of(STRING, Key::toString, str -> {
-        if (!str.contains(":"))
-        {
-            return Key.defaultNamespace(str);
-        } else
-        {
-            String[] split = str.split(":");
-            return Key.withNamespace(split[0], split[1]);
-        }
-    });
+
+    static BufferCodec<ByteBuf, Key> makeKey(String defaultNamespace)
+    {
+        return BufferCodec.of(STRING, Key::toString, str -> Key.parse(defaultNamespace, str));
+    }
 
     BufferCodec<ByteBuf, byte[]> BYTE_ARRAY = BufferCodec.of((buff, arr) -> {
         buff.writeInt(arr.length);

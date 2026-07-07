@@ -2,72 +2,111 @@ package steve6472.core.registry;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import org.jetbrains.annotations.VisibleForTesting;
+import steve6472.core.log.Log;
+import steve6472.core.registry.Holder.Reference;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.stream.Stream;
 
 /**
  * Created by steve6472
- * Date: 9/29/2024
+ * Date: 5/5/2026
  * Project: SteveCore <br>
+ *
  */
-public class Registry<T extends Keyable & Serializable<?>>
+public interface Registry<T> extends Iterable<T>
 {
-    private final Key key;
-    private final Map<Key, T> map = new HashMap<>();
+    Logger LOGGER = Log.getLogger(Registry.class);
+    Reference<T> register(ResourceKey<T> key, T value);
 
-    public Registry(Key key)
+    Optional<Reference<T>> getAny();
+    Optional<Reference<T>> get(T value);
+    Optional<Reference<T>> get(Key key);
+    Optional<Reference<T>> get(ResourceKey<T> key);
+    /// This method is intended to be used from Holder codecs
+    Optional<Reference<T>> getOrCreateReference(ResourceKey<T> key);
+
+    Stream<Reference<T>> listElements();
+
+    boolean isFrozen();
+
+    void freeze();
+
+    ResourceKey<? extends Registry<T>> key();
+    String defaultNamespace();
+
+    default Codec<T> byKeyCodec()
     {
-        this.key = key;
+        return referenceHolder().flatComapMap(Reference::value, value -> this.safeCastToReference(this.wrapAsHolder(value)));
     }
 
-    public Key getRegistryKey()
+    default Codec<Holder<T>> holderByNameCodec()
     {
-        return key;
+        return referenceHolder().flatComapMap(holder -> holder, this::safeCastToReference);
     }
 
-    public Codec<Key> keyCodec()
+    private Codec<Reference<T>> referenceHolder()
     {
-        return Key.CODEC;
+        return Key
+            .makeCodec(defaultNamespace())
+            .comapFlatMap(name -> this
+                .get(name)
+                .map(DataResult::success)
+                .orElseGet(() -> DataResult.error(() -> "Unknown registry key in " + this.key() + ": " + name)),
+                holder -> holder.key().resource());
     }
 
-    public Codec<T> byKeyCodec()
+    private DataResult<Reference<T>> safeCastToReference(final Holder<T> holder)
     {
-        return keyCodec().flatXmap(key -> {
-            T t = map.get(key);
-            if (t == null)
-                return DataResult.error(() -> "No entry in registry '" + getRegistryKey() + "' for key '" + key + "'");
-            else
-                return DataResult.success(t);
-        }, t ->
-        {
-            return DataResult.success(t.key());
-        });
+        if (holder instanceof Reference<T> reference)
+            return DataResult.success(reference);
+
+        return DataResult.error(() -> "Unregistered holder in " + this.key() + ": " + holder);
     }
 
-    public Codec<Map<T, Object>> valueMapCodec()
+    Holder<T> wrapAsHolder(T value);
+
+    @VisibleForTesting
+    void _clear();
+
+    /*
+     * Register, return value
+     */
+
+    static <T> T register(Registry<T> registry, String name, T value)
     {
-        return Codec.dispatchedMap(byKeyCodec(), Serializable::codec);
+        return register(registry, ResourceKey.create(registry.key(), Key.withNamespace(registry.defaultNamespace(), name)), value);
     }
 
-    public void register(Key key, T obj)
+    static <T> T register(Registry<T> registry, Key key, T value)
     {
-        map.put(key, obj);
+        return register(registry, ResourceKey.create(registry.key(), key), value);
     }
 
-    public T register(T obj)
+    static <T> T register(Registry<T> registry, ResourceKey<T> key, T value)
     {
-        map.put(obj.key(), obj);
-        return obj;
+        registry.register(key, value);
+        return value;
     }
 
-    public T get(Key key)
+    /*
+     * Register, return holder
+     */
+
+    static <T> Reference<T> registerForHolder(Registry<T> registry, String name, T value)
     {
-        return map.get(key);
+        return registerForHolder(registry, ResourceKey.create(registry.key(), Key.withNamespace(registry.defaultNamespace(), name)), value);
     }
 
-    public Map<Key, T> getMap()
+    static <T> Reference<T> registerForHolder(Registry<T> registry, Key key, T value)
     {
-        return map;
+        return registerForHolder(registry, ResourceKey.create(registry.key(), key), value);
+    }
+
+    static <T> Reference<T> registerForHolder(Registry<T> registry, ResourceKey<T> key, T value)
+    {
+        return registry.register(key, value);
     }
 }
