@@ -14,7 +14,7 @@ interface Action extends Typed<Action>
         .byKeyCodec()
         .dispatch(Action::codec, Function.identity());
 
-    static void bootstrap(Registry<MapCodec<? extends Action>> registry, Object... extraParams)
+    static void bootstrap(Registry<MapCodec<? extends Action>> registry)
     {
         Registry.register(registry, "heal", Heal.CODEC);
         Registry.register(registry, "damage", Damage.CODEC);
