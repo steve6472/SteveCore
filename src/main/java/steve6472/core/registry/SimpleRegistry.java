@@ -84,6 +84,12 @@ public class SimpleRegistry<T> implements Registry<T>
     }
 
     @Override
+    public int countElements()
+    {
+        return byId.size();
+    }
+
+    @Override
     public boolean isFrozen()
     {
         return isFrozen;

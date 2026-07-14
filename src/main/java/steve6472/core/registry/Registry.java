@@ -29,6 +29,7 @@ public interface Registry<T> extends Iterable<T>
     Optional<Reference<T>> getOrCreateReference(ResourceKey<T> key);
 
     Stream<Reference<T>> listElements();
+    int countElements();
 
     boolean isFrozen();
 
