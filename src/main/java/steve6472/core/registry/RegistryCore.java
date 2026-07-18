@@ -6,6 +6,7 @@ import steve6472.core.log.Log;
 import steve6472.core.module.ModuleManager;
 import steve6472.core.module.ModulePart;
 
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -112,9 +113,20 @@ public class RegistryCore
         return registry;
     }
 
+    private static <E extends Throwable> void sneakyThrow(Throwable e) throws E
+    {
+        //noinspection unchecked
+        throw (E) e;
+    }
+
     public static <T> RegistryBootstrap<T> partLoader(ModulePart<T> part, Codec<T> codec, Supplier<ModuleManager> moduleManager)
     {
-        return (registry) -> moduleManager.get().loadParts(part, codec, (value, key) -> registry.register(ResourceKey.create(registry.key().resource(), key), value));
+        return (registry) -> moduleManager.get().loadParts(part, codec, (value, key) -> registry.register(ResourceKey.create(registry.key().resource(), key), value), (ex, _) -> {sneakyThrow(ex);});
+    }
+
+    public static <T> RegistryBootstrap<T> partLoader(ModulePart<T> part, Codec<T> codec, Supplier<ModuleManager> moduleManager, BiConsumer<Throwable, Key> onFail)
+    {
+        return (registry) -> moduleManager.get().loadParts(part, codec, (value, key) -> registry.register(ResourceKey.create(registry.key().resource(), key), value), onFail);
     }
 
     @FunctionalInterface

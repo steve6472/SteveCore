@@ -1,16 +1,18 @@
 package steve6472.core.module;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.JsonOps;
 import steve6472.core.log.Log;
 import steve6472.core.registry.Key;
-import steve6472.core.util.GsonUtil;
 
-import java.io.File;
+import java.io.*;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
@@ -27,47 +29,48 @@ public final class ResourceCrawl
         recursiveCrawl(startingDir, startingDir, stripExtFromRel, end);
     }
 
-    /// @deprecated use [ModuleManager#loadParts(ModulePart, Codec, BiConsumer)] instead
-    @Deprecated(forRemoval = true)
-    public static <T> void crawlAndLoadJsonCodec(File startingDir, Codec<T> codec, BiConsumer<T, String> end)
-    {
-        crawl(startingDir, true, (file, relPath) ->
-        {
-            JsonElement jsonElement = GsonUtil.loadJson(file);
-            DataResult<Pair<T, JsonElement>> decode;
-            try
-            {
-                decode = codec.decode(JsonOps.INSTANCE, jsonElement);
-            } catch (Exception ex)
-            {
-                LOGGER.severe("Error when decoding:\n" + jsonElement.toString());
-                throw ex;
-            }
-
-            T obj = decode.getOrThrow().getFirst();
-            end.accept(obj, relPath);
-        });
-    }
-
-    public static <T> void crawlAndLoadJsonCodec(FullModulePart part, Codec<T> codec, BiConsumer<T, Key> end)
+    public static <T> void crawlAndLoadJsonCodec(FullModulePart part, Codec<T> codec, BiConsumer<T, Key> end, BiConsumer<Throwable, Key> onFail)
     {
         crawl(part.path(), true, (file, relPath) ->
         {
-            JsonElement jsonElement = GsonUtil.loadJson(file);
-            DataResult<Pair<T, JsonElement>> decode;
             Key key = Key.withNamespace(part.namespace(), relPath);
+
+            JsonElement jsonElement;
+            try (Reader reader = new FileReader(file))
+            {
+                jsonElement = JsonParser.parseReader(reader);
+            } catch (Exception exception)
+            {
+                LOGGER.severe("Error when loading json file '" + file + "'");
+                onFail.accept(exception, key);
+                return;
+            }
+
+            DataResult<Pair<T, JsonElement>> decode;
             LOGGER.finest("Loading %s '%s' from module '%s'".formatted(part.name(), key, part.module().name()));
             try
             {
                 decode = codec.decode(JsonOps.INSTANCE, jsonElement);
-            } catch (Exception ex)
+            } catch (Exception exception)
             {
-                LOGGER.severe("Error when decoding '" + key + "'\n" + jsonElement.toString());
-                throw ex;
+                LOGGER.severe("Error when decoding json '" + key + "'\n" + jsonElement.toString());
+                onFail.accept(exception, key);
+                return;
             }
 
-            T obj = decode.getOrThrow().getFirst();
-            end.accept(obj, Key.withNamespace(part.namespace(), relPath));
+            Pair<T, JsonElement> decodeGet;
+            try
+            {
+                decodeGet = decode.getOrThrow();
+            } catch (Exception exception)
+            {
+                LOGGER.severe("Error when decoding '" + key + "'\n" + jsonElement.toString());
+                onFail.accept(exception, key);
+                return;
+            }
+
+            T obj = decodeGet.getFirst();
+            end.accept(obj, key);
         });
     }
 

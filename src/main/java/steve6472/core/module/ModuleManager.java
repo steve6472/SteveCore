@@ -14,6 +14,8 @@ import steve6472.core.util.GsonUtil;
 import java.io.File;
 import java.util.*;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
@@ -197,9 +199,9 @@ public class ModuleManager
         }
     }
 
-    public <T> void loadParts(ModulePart part, Codec<T> codec, BiConsumer<T, Key> end)
+    public <T> void loadParts(ModulePart part, Codec<T> codec, BiConsumer<T, Key> end, BiConsumer<Throwable, Key> onFail)
     {
-        iterateWithNamespaces((module, namespace) -> ResourceCrawl.crawlAndLoadJsonCodec(module.createPart(part, namespace), codec, end));
+        iterateWithNamespaces((module, namespace) -> ResourceCrawl.crawlAndLoadJsonCodec(module.createPart(part, namespace), codec, end, onFail));
     }
 
     @FunctionalInterface
@@ -208,14 +210,14 @@ public class ModuleManager
         void accept(Module module, File file, Key key, T object);
     }
 
-    public <C> void loadModuleJsonCodecs(ModulePart part, Codec<C> codec, LoadedResult<C> end)
+    public <C> void loadModuleJsonCodecs(ModulePart part, Codec<C> codec, LoadedResult<C> end, BiConsumer<Throwable, Key> onFail)
     {
         for (Module module : getModules())
         {
             module.iterateNamespaces((folder, namespace) ->
             {
                 File file = new File(folder, part.path());
-                ResourceCrawl.crawlAndLoadJsonCodec(module.createPart(part, namespace), codec, (object, key) -> end.accept(module, file, key, object));
+                ResourceCrawl.crawlAndLoadJsonCodec(module.createPart(part, namespace), codec, (object, key) -> end.accept(module, file, key, object), onFail);
             });
         }
     }

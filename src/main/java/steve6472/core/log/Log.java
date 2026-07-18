@@ -1,6 +1,8 @@
 package steve6472.core.log;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.logging.*;
@@ -41,9 +43,9 @@ public class Log
             logger.warning(message);
     }
 
-    public static void exceptionSevere(Logger logger, Throwable throwable)
+    public static void exception(Logger logger, Throwable throwable, String message)
     {
-        logger.log(Level.SEVERE, throwable, throwable::getMessage);
+        logger.log(Level.SEVERE, throwable, () -> message);
     }
 
     public static Logger getLogger(Class<?> clazz)
@@ -109,6 +111,16 @@ public class Log
             builder.append(record.getLevel());
             builder.append(": ");
             builder.append(formatMessage(record));
+
+            if (record.getThrown() != null)
+            {
+                StringWriter sw = new StringWriter();
+                PrintWriter pw = new PrintWriter(sw);
+                pw.println();
+                record.getThrown().printStackTrace(pw);
+                pw.close();
+                builder.append(sw);
+            }
 
             if (isConsole)
                 builder.append(ANSI_RESET);
